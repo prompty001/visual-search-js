@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Document</title>
+    <script>
+        function handleFileSelect(selector) {
+            var files = document.getElementById(selector).files; // Lista de arquivos
+
+            for (var i = 0, f; f = files[i]; i++) {
+                
+                // Confirmar que o arquivo é uma imagem
+                if (!f.type.match('image.*')) {
+                    alert("O arquivo selecionado deve ser uma imagem.");
+                    document.getElementById("uploadImage").value = null;
+                    continue;
+                }
+
+                // Imagem deve ser <= 1 MB e ter cerca de 1500px.
+                if (f.size > 1000000) {
+                    alert("A imagem deve ter menos que 1 MB.");
+                    document.getElementById("uploadImage").value = null;
+                    continue;
+                }
+
+                var reader = new FileReader();
+
+                // Pega as informações do arquivo
+                reader.onload = (function(theFile) {
+                    return function(e) {
+                        var fileOutput = document.getElementById('thumbnail');
+
+                        if (fileOutput.childElementCount > 0) {
+                            fileOutput.removeChild(fileOutput.lastChild); // Remove a foto atual, se existir
+                        }
+
+                        // Renderizar thumbnail
+                        var span = document.createElement('span');
+                        span.innerHTML = ['<img style="height: 200px" class="thumb" src="', e.target.result,
+                                            '" title="', escape(theFile.name), '"/>'].join('');
+                        fileOutput.insertBefore(span, null);
+                    };
+                })(f);
+
+                // Lê o arquivo da imagem como dados de URL.
+                reader.readAsDataURL(f);
+            }
+        }
+
+        // Alternância das divs
+        var divToggleMap = {}; //divToggleMap['foo'] = 0; // 1 = show, 0 = hide
+
+        // Alterna entre mostrar e esconder a div específica
+        function expandCollapse(divToToggle) {
+            var div = document.getElementById(divToToggle);
+
+            if (divToggleMap[divToToggle] == 1) {   // Se a div é expandida
+                div.style.display = "none";
+                divToggleMap[divToToggle] = 0;
+            
+            } else {
+                div.style.display = "inline-block";
+                divToggleMap[divToToggle] = 1;
+            }
+        }
+
+        // Controlar a consulta
+        function handleQuery() {
+            var subscriptionKey = document.getElementById('key').value;
+
+            // if (subscriptionKey !== 32) {
+            //     alert("Tamanho da chave de assinatura inválido.");
+            //     document.getElementById('key').focus();
+            //     return;
+            // }
+
+            var imagePath = document.getElementById('uploadImage').value;
+
+            if (imagePath.length === 0 ) {
+                alert("Por favor, selecione uma imagem para o upload.");
+                document.getElementById('uploadImage').focus();
+                return;
+            }
+
+            var responseDiv = document.getElementById('responseSection');
+
+            // Limpa a resposta da última query
+            while (responseDiv.childElementCount > 0) {
+                responseDiv.removeChild(responseDiv.lastChild);
+            }
+
+            // Envia a resposta p/ o Bing para se receber os insights da imagem
+            var f = document.getElementById('uploadImage').files[0];
+            sendRequest(f, subscriptionKey);
+        }
+
+        // Enviar a requisição
+        function sendRequest(file, key) {
+            var market = document.getElementById('mkt').value;
+            var safeSearch = document.getElementById('safesearch').value;
+            var baseUri = `https://api.bing.microsoft.com/v7.0/images/visualsearch?mkt=${market}&safesearch=${safeSearch}`;
+                                       // cognitive       /bing/v7.0/
+            var form = new FormData();
+            form.append("image", file);
+
+            var request = new XMLHttpRequest();
+
+            request.open("POST", baseUri);
+            request.setRequestHeader('Ocp-Apim-Subscription-Key', key);
+            request.addEventListener('load', handleResponse);
+            request.send(form);
+        }
+
+
+        // Pegar e controlar a resposta da API
+        function handleResponse() {
+            if (this.status !== 200) {
+                alert("Erro ao chamar o Bing Visual Search");
+                console.log(this.responseText);
+            }
+
+            var tags = parseResponse(JSON.parse(this.responseText));
+            var h4 = document.createElement('h4');
+            h4.textContent = 'Bing internet search results';
+            document.getElementById('responseSection').appendChild(h4);
+            buildTagSections(tags);
+
+            document.body.style.cursor = 'default'; // reseta o cursor de espera
+        }
+
+        // Faz o parse response
+        function parseResponse(json) {
+            var dict = {};
+
+            for (var i = 0; i < json.tags.length; i++) {
+                var tag = json.tags[i];
+
+                if (tag.displayName === '') {
+                    dict['Default'] = JSON.stringify(tag);
+                
+                } else {
+                    dict[tag.displayName] = JSON.stringify(tag);
+                }
+            }
+
+            return (dict);
+        }
+
+        // Cri uma seção de tags
+        function buildTagSections(tags) {
+            for (var tag in tags) {
+                if (tags.hasOwnProperty(tag)) {
+                    var tagSection = buildDiv(tags, tag);
+                    document.getElementById('responseSection').appendChild(tagSection);
+                }
+            } 
+        }
+
+        // Cria uma div para cada tag
+        function buildDiv(tags, tag) {
+            var tagSection = document.createElement('div');
+            tagSection.setAttribute('class', 'subSectionMain');
+
+            var link = document.createElement('a');
+            link.setAttribute('href', '#');
+            link.setAttribute('style', 'float: left;')
+            link.text = tag;
+            tagSection.appendChild(link);
+
+            var contentDiv = document.createElement('div');
+            contentDiv.setAttribute('id', tag);
+            contentDiv.setAttribute('style', 'clear: left;')
+            contentDiv.setAttribute('class', 'section');
+            tagSection.appendChild(contentDiv);
+
+            link.setAttribute('onclick', `expandCollapse("${tag}")`);
+            divToggleMap[tag] = 0;  // 1 = show, 0 = hide
+
+            addDivContent(contentDiv, tag, tags[tag]);
+
+            return tagSection;
+        }
+
+        // Exibe os resultados na página
+        function addDivContent(div, tag, json) {
+            // Adiciona os primeiros 100 caracteres do json que contém
+            // os dados da tag. O usuário pode clicar no texto para mostrar o
+            // json completo. Ele podem clicar novamente para colapsar o json.
+            
+            var para = document.createElement('p');
+            para.textContent = String(json).substr(0, 100) + '...';
+            para.setAttribute('title', 'click to expand');
+            para.setAttribute('style', 'cursor: pointer;')
+            para.setAttribute('data-json', json);
+            para.addEventListener('click', function(e) {
+                var json = e.target.getAttribute('data-json');
+
+                if (e.target.textContent.length <= 103) {  // 100 + '...'
+                    e.target.textContent = json;
+                    para.setAttribute('title', 'click to collapse');
+                
+                } else {
+                    para.textContent = String(json).substr(0, 100) + '...';
+                    para.setAttribute('title', 'click to expand');
+                }
+            });
+
+            div.appendChild(para);
+
+            var parsedJson = JSON.parse(json);
+
+            // Percorre as ações da tag e as exibe
+            for (var j = 0; j < parsedJson.actions.length; j++) {
+                var action = parsedJson.actions[j];
+
+                var subSectionDiv = document.createElement('div');
+                subSectionDiv.setAttribute('class', 'subSection');
+                div.appendChild(subSectionDiv);
+
+                var h4 = document.createElement('h4');
+                h4.innerHTML = action.actionType;
+                subSectionDiv.appendChild(h4);
+
+                if (action.actionType === 'ImageResults') {
+                     addImageWithWebSearchUrl(subSectionDiv, parsedJson.image, action);
+                
+                } else if (action.actionType === 'DocumentLevelSuggestions') {
+                    addRelatedSearches(subSectionDiv, action.data.value);
+                
+                } else if (action.actionType === 'RelatedSearches') {
+                    addRelatedSearches(subSectionDiv, action.data.value);
+                
+                } else if (action.actionType === 'PagesIncluding') {
+                    addPagesIncluding(subSectionDiv, action.data.value);
+                
+                // } else if (action.actionType === 'VisualSearch') {
+                //     addRelatedImages(subSectionDiv, action.data.value);
+                
+                // } else if (action.actionType === 'Recipes') {
+                //     addRecipes(subSectionDiv, action.data.value);
+                
+                // } else if (action.actionType === 'ShoppingSources') {
+                //     addShopping(subSectionDiv, action.data.offers);
+                
+                // } else if (action.actionType === 'ProductVisualSearch') {
+                //     addProducts(subSectionDiv, action.data.value);
+                
+                // } else if (action.actionType === 'TextResults') {
+                //     addTextResult(subSectionDiv, action);
+                
+                // } else if (action.actionType === 'Entity') {
+                //     addEntity(subSectionDiv, action);
+                // }
+                }
+            }
+        }
+
+    </script>
+</head>
+<body>
+    <div id="requestSection">
+        <div>
+            <p>Selecione uma imagem para receber seus insights:
+                <input type="file" accept="image/*" id="uploadImage" name="files[]" size=40 onchange="handleFileSelect('uploadImage')"/>
+            </p>
+
+            <output id="thumbnail"></output>
+
+            <div>
+                <p>Chave de Assinatura: 
+                    <input type="text" id="key" name="subscription" size=40 maxlength="32" />
+                </p>
+            </div>
+
+            <div>
+                <p><a href="#" onclick="expandCollapse(options.id)">Query options</a></p>
+            
+                <div id="options" style="display:none">
+                    <p style="margin-left: 20px">Market: 
+                        <select id="mkt">
+                            <option value="es-AR">Argentina (Spanish)</option>
+                            <option value="en-AU">Australia (English)</option>
+                            <option value="de-AT">Austria (German)</option>
+                            <option value="nl-BE">Belgium (Dutch)</option>
+                            <option value="fr-BE">Belgium (French)</option>
+                            <option value="pt-BR" selected>Brazil (Portuguese)</option>
+                            <option value="en-CA">Canada (English)</option>
+                            <option value="fr-CA">Canada (French)</option>
+                            <option value="es-CL">Chile (Spanish)</option>
+                            <option value="da-DK">Denmark (Danish)</option>
+                            <option value="fi-FI">Finland (Finnish)</option>
+                            <option value="fr-FR">France (French)</option>
+                            <option value="de-DE">Germany (German)</option>
+                            <option value="zh-HK">Hong Kong SAR(Traditional Chinese)</option>
+                            <option value="en-IN">India (English)</option>
+                            <option value="en-ID">Indonesia (English)</option>
+                            <option value="it-IT">Italy (Italian)</option>
+                            <option value="ja-JP">Japan (Japanese)</option>
+                            <option value="ko-KR">Korea (Korean)</option>
+                            <option value="en-MY">Malaysia (English)</option>
+                            <option value="es-MX">Mexico (Spanish)</option>
+                            <option value="nl-NL">Netherlands (Dutch)</option>
+                            <option value="en-NZ">New Zealand (English)</option>
+                            <option value="no-NO">Norway (Norwegian)</option>
+                            <option value="zh-CN">People's Republic of China (Chinese)</option>
+                            <option value="pl-PL">Poland (Polish)</option>
+                            <option value="pt-PT">Portugal (Portuguese)</option>
+                            <option value="en-PH">Philippines (English)</option>
+                            <option value="ru-RU">Russia (Russian)</option>
+                            <option value="ar-SA">Saudi Arabia (Arabic)</option>
+                            <option value="en-ZA">South Africa (English)</option>
+                            <option value="es-ES">Spain (Spanish)</option>
+                            <option value="sv-SE">Sweden (Swedish)</option>
+                            <option value="fr-CH">Switzerland (French)</option>
+                            <option value="de-CH">Switzerland (German)</option>
+                            <option value="zh-TW">Taiwan (Traditional Chinese)</option>
+                            <option value="tr-TR">Turkey (Turkish)</option>
+                            <option value="en-GB">United Kingdom (English)</option>
+                            <option value="en-US">United States (English)</option>
+                            <option value="es-US">United States (Spanish)</option>
+                        </select>
+                    </p>
+                    <p style="margin-left: 20px">Safe search: 
+                        <select id="safesearch">
+                            <option value="moderate" selected>Moderate</option>
+                            <option value="strict">Strict</option>
+                            <option value="off">off</option>
+                        </select>
+                    </p>
+                </div>
+            </div>
+
+            <p><input type="button" id="query" value="Get insights" onclick="document.body.style.cursor='wait'; handleQuery()" /></p>
+
+        </div>
+    </div>
+    <hr />
+    <div id="responseSection">
+</body>
+</html>
