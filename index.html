@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Document</title>
-	
+    <title>Visual Search</title>
+    <link rel="stylesheet" href="style.css">
     <script>
         function handleFileSelect(selector) {
             var files = document.getElementById(selector).files; // Lista de arquivos
@@ -115,17 +115,17 @@
         // Pegar e controlar a resposta da API
         function handleResponse() {
             if (this.status !== 200) {
-                alert("Erro ao chamar o Bing Visual Search");
+                alert("Erro ao chamar a API do Bing.");
                 console.log(this.responseText);
             }
 
+            document.body.style.cursor = 'default'; // reseta o cursor de espera
             var tags = parseResponse(JSON.parse(this.responseText));
             var h4 = document.createElement('h4');
-            h4.textContent = 'Bing internet search results';
+            h4.textContent = 'Resultados Obtidos';
+            h4.setAttribute('style', 'text-align: center; font-size: 20px; color: rgb(191, 185, 185)')
             document.getElementById('responseSection').appendChild(h4);
             buildTagSections(tags);
-
-            document.body.style.cursor = 'default'; // reseta o cursor de espera
         }
 
         // Faz o parse response
@@ -161,19 +161,19 @@
             var tagSection = document.createElement('div');
             tagSection.setAttribute('class', 'subSectionMain');
 
-            var link = document.createElement('a');
-            link.setAttribute('href', '#');
-            link.setAttribute('style', 'float: left;')
-            link.text = tag;
-            tagSection.appendChild(link);
+            // var link = document.createElement('a');
+            // link.setAttribute('href', '#');
+            // link.setAttribute('style', 'float: left;')
+            // link.text = tag;
+            // tagSection.appendChild(link);
 
             var contentDiv = document.createElement('div');
             contentDiv.setAttribute('id', tag);
-            contentDiv.setAttribute('style', 'clear: left;')
+            contentDiv.setAttribute('style', 'clear: left; font-size: 18px; color: black')
             contentDiv.setAttribute('class', 'section');
             tagSection.appendChild(contentDiv);
 
-            link.setAttribute('onclick', `expandCollapse("${tag}")`);
+            //link.setAttribute('onclick', `expandCollapse("${tag}")`);
             divToggleMap[tag] = 0;  // 1 = show, 0 = hide
 
             addDivContent(contentDiv, tag, tags[tag]);
@@ -187,25 +187,25 @@
             // os dados da tag. O usuário pode clicar no texto para mostrar o
             // json completo. Ele podem clicar novamente para colapsar o json.
             
-            var para = document.createElement('p');
-            para.textContent = String(json).substr(0, 100) + '...';
-            para.setAttribute('title', 'click to expand');
-            para.setAttribute('style', 'cursor: pointer;')
-            para.setAttribute('data-json', json);
-            para.addEventListener('click', function(e) {
-                var json = e.target.getAttribute('data-json');
+            // var para = document.createElement('p');
+            // para.textContent = String(json).substr(0, 100) + '...';
+            // para.setAttribute('title', 'click to expand');
+            // para.setAttribute('style', 'cursor: pointer;')
+            // para.setAttribute('data-json', json);
+            // para.addEventListener('click', function(e) {
+                // var json = e.target.getAttribute('data-json');
+// 
+                // if (e.target.textContent.length <= 103) {  // 100 + '...'
+                    // e.target.textContent = json;
+                    // para.setAttribute('title', 'click to collapse');
+                // 
+                // } else {
+                    // para.textContent = String(json).substr(0, 100) + '...';
+                    // para.setAttribute('title', 'click to expand');
+                // }
+            // });
 
-                if (e.target.textContent.length <= 103) {  // 100 + '...'
-                    e.target.textContent = json;
-                    para.setAttribute('title', 'click to collapse');
-                
-                } else {
-                    para.textContent = String(json).substr(0, 100) + '...';
-                    para.setAttribute('title', 'click to expand');
-                }
-            });
-
-            div.appendChild(para);
+            // div.appendChild(para);
 
             var parsedJson = JSON.parse(json);
 
@@ -219,8 +219,8 @@
 
                 var h4 = document.createElement('h4');
                 h4.innerHTML = action.actionType;
-                subSectionDiv.appendChild(h4);
-
+                subSectionDiv.appendChild(h4);            
+                
                 if (action.actionType === 'ImageResults') {
                      addImageWithWebSearchUrl(subSectionDiv, parsedJson.image, action);
                 
@@ -233,245 +233,262 @@
                 } else if (action.actionType === 'PagesIncluding') {
                     addPagesIncluding(subSectionDiv, action.data.value);
                 
-                 } else if (action.actionType === 'VisualSearch') {
+                } else if (action.actionType === 'VisualSearch') {
                     addRelatedImages(subSectionDiv, action.data.value);
-               
-                 } else if (action.actionType === 'Recipes') {
-                     addRecipes(subSectionDiv, action.data.value);
-                
-                 } else if (action.actionType === 'ShoppingSources') {
-                     addShopping(subSectionDiv, action.data.offers);
-                
-                 } else if (action.actionType === 'ProductVisualSearch') {
-                     addProducts(subSectionDiv, action.data.value);
-                
-                 } else if (action.actionType === 'TextResults') {
-                     addTextResult(subSectionDiv, action);
-                
-                 } else if (action.actionType === 'Entity') {
-                     addEntity(subSectionDiv, action);
-                 }
                 }
+            
+                // } else if (action.actionType === 'Recipes') {
+                //     addRecipes(subSectionDiv, action.data.value);
+            
+                // } else if (action.actionType === 'ShoppingSources') {
+                    // addShopping(subSectionDiv, action.data.offers);
+            
+                // } else if (action.actionType === 'ProductVisualSearch') {
+                    // addProducts(subSectionDiv, action.data.value);
+            
+                else if (action.actionType === 'TextResults') {
+                    addTextResult(subSectionDiv, action);
+                }
+                    
+                // } else if (action.actionType === 'Entity') {
+                //     addEntity(subSectionDiv, action);
+                // }
             }
-        
+        }
 		
-		 function addRelatedImages(div, images) {
-        var length = (images.length > 10) ? 10 : images.length;
+		function addRelatedImages(div, images) {
+            var length = (images.length > 27) ? 27 : images.length;
 
-        // Set the title to the website that hosts the image. The title displays
-        // when the user hovers over the image.
+            // Set the title to the website that hosts the image. The title displays
+            // when the user hovers over the image.
 
-        // Make the image clickable. If the user clicks the image, they're taken
-        // to the image in Bing.com.
+            // Make the image clickable. If the user clicks the image, they're taken
+            // to the image in Bing.com.
 
-        for (var j = 0; j < length; j++) {
-            var img = document.createElement('img');
-            img.setAttribute('src', images[j].thumbnailUrl + '&w=120&h=120');
-            img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
-            img.setAttribute('title', images[j].hostPageDisplayUrl);
-            img.setAttribute('data-webSearchUrl', images[j].webSearchUrl)
+            var count = 0;
 
-            img.addEventListener('click', function(e) {
-                var url = e.target.getAttribute('data-webSearchUrl');
-                window.open(url, 'foo');
-            })
+            for (var j = 0; j < length; j++) {
+                //var countTag = document.createElement('p');
+                var img = document.createElement('img');
+                //countTag.innerHTML = count++;
+                img.setAttribute('src', images[j].thumbnailUrl + '&w=120&h=120');
+                img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
+                img.setAttribute('title', images[j].hostPageDisplayUrl);
+                img.setAttribute('data-webSearchUrl', images[j].webSearchUrl)
 
-            div.appendChild(img);
-        }
-    }
-	 // Display links to the first 5 webpages that include the image.
-    // TODO: Add 'more' link in case the user wants to see all of them.
-    function addPagesIncluding(div, pages) {
-        var length = (pages.length > 5) ? 5 : pages.length;
+                img.addEventListener('click', function(e) {
+                    var url = e.target.getAttribute('data-webSearchUrl');
+                    window.open(url, 'foo');
+                })
 
-        for (var j = 0; j < length; j++) {
-            var page = document.createElement('a');
-            page.text = pages[j].name;
-            page.setAttribute('href', pages[j].hostPageUrl);
-            page.setAttribute('style', 'margin: 20px 20px 0 0');
-            page.setAttribute('target', '_blank')
-            div.appendChild(page);
-
-            div.appendChild(document.createElement('br'));
-        }
-    }
-	    // Display the first 10 related searches. Include a link with the image
-    // that when clicked, takes the user to Bing.com and displays the 
-    // related search results.
-    // TODO: Add 'more' link in case the user wants to see all of them.
-    function addRelatedSearches(div, relatedSearches) {
-        var length = (relatedSearches.length > 10) ? 10 : relatedSearches.length;
-
-        for (var j = 0; j < length; j++) {
-            var childDiv = document.createElement('div');
-            childDiv.setAttribute('class', 'stackLink');
-            div.appendChild(childDiv);
-
-            var img = document.createElement('img');
-            img.setAttribute('src', relatedSearches[j].thumbnail.url + '&w=120&h=120');
-            img.setAttribute('style', 'margin: 20px 20px 0 0;');
-            childDiv.appendChild(img);
-
-            var relatedSearch = document.createElement('a');
-            relatedSearch.text = relatedSearches[j].displayText;
-            relatedSearch.setAttribute('href', relatedSearches[j].webSearchUrl);
-            relatedSearch.setAttribute('target', '_blank');
-            childDiv.appendChild(relatedSearch);
-
-        }
-    }
-		    // Display links to the first 10 recipes. Include the recipe's rating,
-    // if available.
-    // TODO: Add 'more' link in case the user wants to see all of them.
-    function addRecipes(div, recipes) {
-        var length = (recipes.length > 10) ? 10 : recipes.length;
-
-        for (var j = 0; j < length; j++) {
-            var para = document.createElement('p');
-
-            var recipe = document.createElement('a');
-            recipe.text = recipes[j].name;
-            recipe.setAttribute('href', recipes[j].url);
-            recipe.setAttribute('style', 'margin: 20px 20px 0 0');
-            recipe.setAttribute('target', '_blank')
-            para.appendChild(recipe);
-
-            if (recipes[j].hasOwnProperty('aggregateRating')) {
-                var span = document.createElement('span');
-                span.textContent = 'rating: ' + recipes[j].aggregateRating.text;
-                para.appendChild(span);
+                div.appendChild(img);
+                //div.appendChild(countTag);
             }
-
-            div.appendChild(para);
         }
-    }
-	  // Display links for the first 10 shopping offers.
-    // TODO: Add 'more' link in case the user wants to see all of them.
-    function addShopping(div, offers) {
-        var length = (offers.length > 10) ? 10 : offers.length;
 
-        for (var j = 0; j < length; j++) {
-            var para = document.createElement('p');
+	    // Exibe links para as 5 primeiras páginas da web que incluem a imagem.
+        // TODO: Add 'more' link in case the user wants to see all of them.
+        function addPagesIncluding(div, pages) {
+            var length = (pages.length > 5) ? 5 : pages.length;
 
-            var offer = document.createElement('a');
-            offer.text = offers[j].name;
-            offer.setAttribute('href', offers[j].url);
-            offer.setAttribute('style', 'margin: 20px 20px 0 0');
-            offer.setAttribute('target', '_blank')
-            para.appendChild(offer);
+            for (var j = 0; j < length; j++) {
+                var page = document.createElement('a');
+                page.text = pages[j].name;
+                page.setAttribute('href', pages[j].hostPageUrl);
+                page.setAttribute('style', 'margin: 20px 20px 0 0');
+                page.setAttribute('target', '_blank')
+                div.appendChild(page);
 
-            var span = document.createElement('span');
-            span.textContent = 'by ' + offers[j].seller.name + ' | ' + offers[j].price + ' ' + offers[j].priceCurrency;
-            para.appendChild(span);
-
-            div.appendChild(para);
+                div.appendChild(document.createElement('br'));
+            }
         }
-    }
+
+	    // Display the first 10 related searches. Include a link with the image
+        // that when clicked, takes the user to Bing.com and displays the 
+        // related search results.
+        // TODO: Add 'more' link in case the user wants to see all of them.
+
+        function addRelatedSearches(div, relatedSearches) {
+            var length = (relatedSearches.length > 10) ? 10 : relatedSearches.length;
+
+            for (var j = 0; j < length; j++) {
+                var childDiv = document.createElement('div');
+                childDiv.setAttribute('class', 'stackLink');
+                div.appendChild(childDiv);
+
+                var img = document.createElement('img');
+                img.setAttribute('src', relatedSearches[j].thumbnail.url + '&w=120&h=120');
+                img.setAttribute('style', 'margin: 20px 20px 0 0;');
+                childDiv.appendChild(img);
+
+                var relatedSearch = document.createElement('a');
+                relatedSearch.text = relatedSearches[j].displayText;
+                relatedSearch.setAttribute('href', relatedSearches[j].webSearchUrl);
+                relatedSearch.setAttribute('target', '_blank');
+                childDiv.appendChild(relatedSearch);
+            }
+        }
+
+		// Display links to the first 10 recipes. Include the recipe's rating,
+        // if available.
+        // TODO: Add 'more' link in case the user wants to see all of them.
+        function addRecipes(div, recipes) {
+            var length = (recipes.length > 10) ? 10 : recipes.length;
+
+            for (var j = 0; j < length; j++) {
+                var para = document.createElement('p');
+
+                var recipe = document.createElement('a');
+                recipe.text = recipes[j].name;
+                recipe.setAttribute('href', recipes[j].url);
+                recipe.setAttribute('style', 'margin: 20px 20px 0 0');
+                recipe.setAttribute('target', '_blank')
+                para.appendChild(recipe);
+
+                if (recipes[j].hasOwnProperty('aggregateRating')) {
+                    var span = document.createElement('span');
+                    span.textContent = 'rating: ' + recipes[j].aggregateRating.text;
+                    para.appendChild(span);
+                }
+
+                div.appendChild(para);
+            }
+        }
+	    // Display links for the first 10 shopping offers.
+        // TODO: Add 'more' link in case the user wants to see all of them.
+
+        function addShopping(div, offers) {
+            var length = (offers.length > 10) ? 10 : offers.length;
+
+            for (var j = 0; j < length; j++) {
+                var para = document.createElement('p');
+
+                var offer = document.createElement('a');
+                offer.text = offers[j].name;
+                offer.setAttribute('href', offers[j].url);
+                offer.setAttribute('style', 'margin: 20px 20px 0 0');
+                offer.setAttribute('target', '_blank')
+                para.appendChild(offer);
+
+                var span = document.createElement('span');
+                span.textContent = 'by ' + offers[j].seller.name + ' | ' + offers[j].price + ' ' + offers[j].priceCurrency;
+                para.appendChild(span);
+
+                div.appendChild(para);
+            }
+        }
 	
-    // Display the first 10 related products. Display a clickable image of the
-    // product that takes the user to Bing.com search results for the product.
-    // If there are any offers associated with the product, provide links to the offers.
-    // TODO: Add 'more' link in case the user wants to see all of them.
-    function addProducts(div, products) {
-        var length = (products.length > 10) ? 10 : products.length;
+        // Display the first 10 related products. Display a clickable image of the
+        // product that takes the user to Bing.com search results for the product.
+        // If there are any offers associated with the product, provide links to the offers.
+        // TODO: Add 'more' link in case the user wants to see all of them.
+        function addProducts(div, products) {
+            var length = (products.length > 10) ? 10 : products.length;
 
-        for (var j = 0; j < length; j++) {
-            var childDiv = document.createElement('div');
-            childDiv.setAttribute('class', 'stackLink');
-            div.appendChild(childDiv);
+            for (var j = 0; j < length; j++) {
+                var childDiv = document.createElement('div');
+                childDiv.setAttribute('class', 'stackLink');
+                div.appendChild(childDiv);
 
-            var img = document.createElement('img');
-            img.setAttribute('src', products[j].thumbnailUrl + '&w=120&h=120');
-            img.setAttribute('title', products[j].name);
-            img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
-            img.setAttribute('data-webSearchUrl', products[j].webSearchUrl)
-            img.addEventListener('click', function(e) {
-                var url = e.target.getAttribute('data-webSearchUrl');
-                window.open(url, 'foo');
-            })
-            childDiv.appendChild(img);
+                var img = document.createElement('img');
+                img.setAttribute('src', products[j].thumbnailUrl + '&w=120&h=120');
+                img.setAttribute('title', products[j].name);
+                img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
+                img.setAttribute('data-webSearchUrl', products[j].webSearchUrl)
+                img.addEventListener('click', function(e) {
+                    var url = e.target.getAttribute('data-webSearchUrl');
+                    window.open(url, 'foo');
+                })
+                childDiv.appendChild(img);
 
-            if (products[j].insightsMetadata.hasOwnProperty('aggregateOffer')) {
-                if (products[j].insightsMetadata.aggregateOffer.offerCount > 0) {
-                    var offers = products[j].insightsMetadata.aggregateOffer.offers;
+                if (products[j].insightsMetadata.hasOwnProperty('aggregateOffer')) {
+                    if (products[j].insightsMetadata.aggregateOffer.offerCount > 0) {
+                        var offers = products[j].insightsMetadata.aggregateOffer.offers;
 
-                    // Show all the offers. Not all markets provide links to offers.
-                    for (var i = 0; i < offers.length; i++) {  
+                        // Show all the offers. Not all markets provide links to offers.
+                        for (var i = 0; i < offers.length; i++) {  
+                            var para = document.createElement('p');
+
+                            var offer = document.createElement('a');
+                            offer.text = offers[i].name;
+                            offer.setAttribute('href', offers[i].url);
+                            offer.setAttribute('style', 'margin: 20px 20px 0 0');
+                            offer.setAttribute('target', '_blank')
+                            para.appendChild(offer);
+
+                            var span = document.createElement('span');
+                            span.textContent = 'by ' + offers[i].seller.name + ' | ' + offers[i].price + ' ' + offers[i].priceCurrency;
+                            para.appendChild(span);
+
+                            childDiv.appendChild(para);
+                        }
+                    }
+                    else {  // Otherwise, just show the lowest price that Bing found.
+                        var offer = products[j].insightsMetadata.aggregateOffer;
+
                         var para = document.createElement('p');
-
-                        var offer = document.createElement('a');
-                        offer.text = offers[i].name;
-                        offer.setAttribute('href', offers[i].url);
-                        offer.setAttribute('style', 'margin: 20px 20px 0 0');
-                        offer.setAttribute('target', '_blank')
-                        para.appendChild(offer);
-
-                        var span = document.createElement('span');
-                        span.textContent = 'by ' + offers[i].seller.name + ' | ' + offers[i].price + ' ' + offers[i].priceCurrency;
-                        para.appendChild(span);
+                        para.textContent = `${offer.name} | ${offer.lowPrice} ${offer.priceCurrency}`; 
 
                         childDiv.appendChild(para);
                     }
                 }
-                else {  // Otherwise, just show the lowest price that Bing found.
-                    var offer = products[j].insightsMetadata.aggregateOffer;
-
-                    var para = document.createElement('p');
-                    para.textContent = `${offer.name} | ${offer.lowPrice} ${offer.priceCurrency}`; 
-
-                    childDiv.appendChild(para);
-                }
             }
         }
-    }
 	
-    function addTextResult(div, action) {
-        var text = document.createElement('p');
-        text.textContent = action.displayName;
-        div.appendChild(text);
-    }
+        function addTextResult(div, action) {
+            var text = document.createElement('p');
+            text.textContent = action.displayName;
+            div.appendChild(text);
+        }
 
-    // If the image is of a person, the tag might include an entity
-    // action type. Display a link that takes the user to Bing.com
-    // where they can get details about the entity.
-    function addEntity(div, action) {
-        var entity = document.createElement('a');
-        entity.text = action.displayName;
-        entity.setAttribute('href', action.webSearchUrl);
-        entity.setAttribute('style', 'margin: 20px 20px 0 0');
-        entity.setAttribute('target', '_blank');
-        div.appendChild(entity);
-    }
-	  function addImageWithWebSearchUrl(div, image, action) {
-        var img = document.createElement('img');
-        img.setAttribute('src', image.thumbnailUrl + '&w=120&h=120');
-        img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
-        img.setAttribute('data-webSearchUrl', action.webSearchUrl);
-        img.addEventListener('click', function(e) {
-            var url = e.target.getAttribute('data-webSearchUrl');
-            window.open(url, 'foo');
-        })
-        div.appendChild(img);
-    }
+        // If the image is of a person, the tag might include an entity
+        // action type. Display a link that takes the user to Bing.com
+        // where they can get details about the entity.
+        function addEntity(div, action) {
+            var entity = document.createElement('a');
+            entity.text = action.displayName;
+            entity.setAttribute('href', action.webSearchUrl);
+            entity.setAttribute('style', 'margin: 20px 20px 0 0');
+            entity.setAttribute('target', '_blank');
+            div.appendChild(entity);
+        }
+        
+        function addImageWithWebSearchUrl(div, image, action) {
+            var img = document.createElement('img');
+            img.setAttribute('src', image.thumbnailUrl + '&w=120&h=120');
+            img.setAttribute('style', 'margin: 20px 20px 0 0; cursor: pointer;');
+            img.setAttribute('data-webSearchUrl', action.webSearchUrl);
+            img.addEventListener('click', function(e) {
+                var url = e.target.getAttribute('data-webSearchUrl');
+                window.open(url, 'foo');
+            })
+            div.appendChild(img);
+        }
+        
     </script>
 </head>
 <body>
     <div id="requestSection">
-        <div>
-            <p>Selecione uma imagem para receber seus insights:
-                <input type="file" accept="image/*" id="uploadImage" name="files[]" size=40 onchange="handleFileSelect('uploadImage')"/>
+        <div class="mainRequest">
+
+            <div class="titleProj">
+                <h2>Visual Search</h2>
+            </div>
+
+            <p class="select-image">Selecione uma imagem para pesquisar seus insights:
+                <input class="btn-image" type="file" accept="image/*" id="uploadImage" name="files[]" size=40 onchange="handleFileSelect('uploadImage')"/>
             </p>
 
             <output id="thumbnail"></output>
 
-            <div>
+            <div style="display: none;">
                 <p>Chave de Assinatura: 
                     <input type="text" id="key" name="subscription" size=40 maxlength="32" />
                 </p>
             </div>
 
             <div>
-                <p><a href="#" onclick="expandCollapse(options.id)">Query options</a></p>
+                <p style="display: none;"><a href="#" onclick="expandCollapse(options.id)">Query options</a></p>
             
                 <div id="options" style="display:none">
                     <p style="margin-left: 20px">Market: 
@@ -528,11 +545,10 @@
                 </div>
             </div>
 
-            <p><input type="button" id="query" value="Get insights" onclick="document.body.style.cursor='wait'; handleQuery()" /></p>
+            <p><input type="button" id="query" value="Get Insights" onclick="document.body.style.cursor='wait'; handleQuery()" /></p>
 
         </div>
     </div>
-    <hr />
     <div id="responseSection">
 </body>
 </html>
