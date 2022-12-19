@@ -1,0 +1,86 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #333;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.mainRequest {
+    margin: 10px;
+    padding: 10px;
+    background-color: rgb(39, 37, 37);
+    border-radius: 5px;
+}
+
+.subSectionMain {
+    margin-top: 15px;
+    margin: 10px;
+    padding: 10px;
+    background-color: rgb(39, 37, 37);
+    border-radius: 5px;
+}
+
+.titleProj h2 {
+    margin-top: 10px;
+    color: rgb(191, 185, 185);
+}
+
+.select-image {
+    font-size: 16px;
+    margin-top: 10px;
+    color: #fff;
+}
+
+
+#thumbnail img {
+    margin-top: 10px;
+}
+
+#query {
+    color: #fff;
+    font-size: 15px;
+    margin-top: 10px;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 0;
+    background-color: #555;
+}
+
+#query:hover {
+    background-color: #444;
+}
+
+
+.subSectionMain h4 {
+    margin-top: 10px;
+    color: rgb(191, 185, 185)
+}
+
+.subSection a {
+    text-decoration: none;
+    color: rgb(53, 40, 196);
+}
+
+.subSection a:hover {
+    color: rgb(205, 23, 23);
+}
+
+.stackLink a {
+    color: white;
+}
+
+.stackLink a:hover {
+    color: rgb(205, 23, 23);
+}
+
+.subSection img {
+    background-color: red;
+}
